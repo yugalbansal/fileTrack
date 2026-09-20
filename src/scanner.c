@@ -19,11 +19,15 @@ void ReadDirectory(char *path, FileList *list)
     struct dirent *entry;
     while ((entry = readdir(dir)) != NULL)
     {
-        // case - ignore . ..
-        if (strcmp(entry->d_name, ".") == 0)
+        // case - ignore . .. .ft
+        if (strcmp(entry->d_name, ".") == 0 ||
+            strcmp(entry->d_name, "..") == 0 ||
+            strcmp(entry->d_name, ".ft") == 0)
+        {
+
             continue;
-        if (strcmp(entry->d_name, "..") == 0)
-            continue;
+        }
+
         // check it is file or directory
         if (entry->d_type == DT_REG)
         {
