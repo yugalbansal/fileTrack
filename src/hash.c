@@ -41,3 +41,48 @@ int hashFile(char *path, char *hash)
     hash[64] = '\0';
     return 0;
 }
+
+void calculateTreeHash(Node *node)
+{
+    if (node == NULL)
+    {
+        return;
+    }
+
+    if (!node->isDirectory)
+    {
+        return;
+    }
+
+    for (int i = 0; i < node->childCount; i++)
+    {
+        calculateTreeHash(node->children[i]);
+    }
+
+    SHA256_CTX ctx;
+    unsigned char raw[SHA256_DIGEST_LENGTH];
+
+    SHA256_Init(&ctx);
+
+    for (int i = 0; i < node->childCount; i++)
+    {
+        SHA256_Update(
+            &ctx,
+            node->children[i]->hash,
+            strlen(node->children[i]->hash)
+        );
+    }
+
+    SHA256_Final(raw, &ctx);
+
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
+    {
+        sprintf(
+            node->hash + (i * 2),
+            "%02x",
+            raw[i]
+        );
+    }
+
+    node->hash[64] = '\0';
+}

@@ -3,28 +3,52 @@
 #include <string.h>
 #include "file.h"
 
-void initFileList(FileList *list){
-    list->files = NULL;
-    list->size = 0;
-    list->capacity = 0;
-}
+Node *createNode(char *name, char *hash, int isDirectory){
+    Node *node = malloc(sizeof(Node));
 
-void addFile(FileList *list, char *path, char *hash){
-    if(list->size == list->capacity){
-        if(list->capacity == 0){
-            list->capacity = 10;
-        }
-        else{
-            list->capacity *=2;
-        }
-        list->files = realloc(list->files, list->capacity * sizeof(FileInfo));
+    if (node == NULL) {
+        return NULL;
     }
 
-    strcpy(list->files[list->size].path, path);
-    strcpy(list->files[list->size].hash, hash);
-    list->size++;
-}
+    strcpy(node->path, name);
+    strcpy(node->hash, hash);
+    node->isDirectory = isDirectory;
+    node->children = NULL;
+    node->childCount = 0;
+    node->capacity = 0;
 
-void freeFileList(FileList *list) {
-    free(list->files);
+    return node;
+
+}
+void addChild(Node *parent, Node *child){
+    if (parent->childCount == parent->capacity) {
+
+        if (parent->capacity == 0) {
+            parent->capacity = 4;
+        }
+        else {
+            parent->capacity *= 2;
+        }
+
+        parent->children = realloc(
+            parent->children,
+            parent->capacity * sizeof(Node *)
+        );
+    }
+
+    parent->children[parent->childCount] = child;
+    parent->childCount++;
+
+}
+void freeNode(Node *node){
+     if (node == NULL) {
+        return;
+    }
+
+    for (int i = 0; i < node->childCount; i++) {
+        freeNode(node->children[i]);
+    }
+
+    free(node->children);
+    free(node);
 }

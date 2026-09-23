@@ -1,19 +1,19 @@
 #ifndef FILE_H
 #define FILE_H
 
-typedef struct {
+typedef struct Node{
     char path[1000];
     char hash[65];
-} FileInfo;
+    int isDirectory;
 
-typedef struct {
-    FileInfo *files;
-    int size;
-    int capacity;
-} FileList;
+    struct Node **children; // children array of nodes 
+    int childCount; // children count 
+    int capacity; // size allocated for this array 
+} Node;
 
-void initFileList(FileList *list);
-void addFile(FileList *list, char *path, char *hash);
-void freeFileList(FileList *list);
+
+Node *createNode(char *name, char *hash, int isDirectory);
+void addChild(Node *parent, Node *child);
+void freeNode(Node *node);
 
 #endif

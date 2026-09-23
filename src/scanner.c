@@ -1,4 +1,5 @@
 #define _DEFAULT_SOURCE
+
 #include "scanner.h"
 #include "file.h"
 #include "hash.h"
@@ -7,48 +8,76 @@
 #include <dirent.h>
 #include <string.h>
 
-void ReadDirectory(char *path, FileList *list)
+Node *ReadDirectory(char *path)
 {
-    // now open dir
     DIR *dir = opendir(path);
+
     if (dir == NULL)
     {
-        printf("Could not open directory");
-        return;
+        printf("Could not open directory\n");
+        return NULL;
     }
+
+    Node *root = createNode(path, "", 1);
+
+    if (root == NULL)
+    {
+        closedir(dir);
+        return NULL;
+    }
+
     struct dirent *entry;
+
     while ((entry = readdir(dir)) != NULL)
     {
-        // case - ignore . .. .ft
         if (strcmp(entry->d_name, ".") == 0 ||
             strcmp(entry->d_name, "..") == 0 ||
             strcmp(entry->d_name, ".ft") == 0)
         {
-
             continue;
         }
 
-        // check it is file or directory
+        char newPath[1000];
+
+        snprintf(
+            newPath,
+            sizeof(newPath),
+            "%s/%s",
+            path,
+            entry->d_name
+        );
+
         if (entry->d_type == DT_REG)
         {
-
-            char filePath[1000];
             char hash[65];
-            snprintf(filePath, sizeof(filePath),
-                     "%s/%s", path, entry->d_name);
 
-            if (hashFile(filePath, hash) == 0)
+            if (hashFile(newPath, hash) == 0)
             {
-                addFile(list, filePath, hash);
+                Node *file = createNode(
+                    newPath,
+                    hash,
+                    0
+                );
+
+                if (file != NULL)
+                {
+                    addChild(root, file);
+                }
             }
         }
+
         else if (entry->d_type == DT_DIR)
         {
-            char newPath[1000];
-            snprintf(newPath, sizeof(newPath), "%s/%s", path, entry->d_name);
-            ReadDirectory(newPath, list);
+            Node *directory = ReadDirectory(newPath);
+
+            if (directory != NULL)
+            {
+                addChild(root, directory);
+            }
         }
     }
-    // close dir
+
     closedir(dir);
+
+    return root;
 }

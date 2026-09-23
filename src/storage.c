@@ -12,13 +12,36 @@ int createFt(char *path)
     return mkdir(createPath, 0755);
 }
 
-int saveIndex(int fd, FileInfo *file)
-{
+int saveTree(int fd, Node *node){
     char buffer[1100];
-    int n = snprintf(buffer, sizeof(buffer),
-                     "%s %s\n",
-                     file->path,
-                     file->hash);
 
-    return write(fd, buffer, n);
+    char type;
+
+    if (node->isDirectory) {
+        type = 'D';
+    }
+    else {
+        type = 'F';
+    }
+
+    int n = snprintf(
+        buffer,
+        sizeof(buffer),
+        "%c %s %s\n",
+        type,
+        node->path,
+        node->hash
+    );
+
+    if (write(fd, buffer, n) != n) {
+        return -1;
+    }
+
+    for (int i = 0; i < node->childCount; i++) {
+        if (saveTree(fd, node->children[i]) == -1) {
+            return -1;
+        }
+    }
+
+    return 0;
 }
